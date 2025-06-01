@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+<title>{% block title %}User Dashboard - {% endblock %}Webcam Food Detection system</title>
+{%block body%}
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+        font-family: 'PT Sans Caption',"Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    }
+    .navbar {
+    background-color: #2D3047; /* Dark blue */
+    color: white;
+    padding: 10px 30px;
+    display: flex;
+    height: 7vh;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    background-color: #2D3047; /* Lighter blue */
+    margin-left: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.navbar a:hover {
+    background-color: #2D3047; /* Hover effect */
+}
+
+</style>
+<body>
+    <div class="preloader">
+        <div class="loader"></div>
+    </div>
+    <div class="navbar">
+        <h1>Dashboard</h1>
+        <div>
+            {%if session.get("role") == "Admin"%}
+                <a href="/">Home</a>
+                <a href="/capture">Capture  Image</a>
+                <a href="/admin">Dashboard</a>
+                <a href="/logout">Logout</a>
+            {%else%}
+                <a href="/">Home</a>
+                <a href="/capture">Capture  Image</a>
+                <a href="/logout">Logout</a>
+            {%endif%}
+        </div>
+    </div>
+    <div class="container">
+
+
+    <h1>Welcome, {{ session['name'] }}</h1>
+    <h2>Your Food Predictions</h2>
+
+    {% if predictions %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Food Type</th>
+                    <th>Country</th>
+                    <th>Confidence</th>
+                    <th>Description</th>
+                    <th>Nutrients</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prediction in predictions %}
+                    <tr>
+                        <td>{{ prediction[0] }}</td>
+                        <td>{{ prediction[1] }}</td>
+                        <td>{{ prediction[2] }}</td>
+                        <td>{{ prediction[3] }}</td>
+                        <td>{{ prediction[4] }}</td>
+                        <td>{{ prediction[5] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have not made any predictions yet.</p>
+    {% endif %}
+
+    </div>
+    <script src="{{url_for('static',filename='preloader.js')}}"></script>
+{%endblock%}

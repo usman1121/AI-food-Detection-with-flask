@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+<title>{% block title %}Home - {% endblock %}Webcam Food Detection system</title>
+
+
+  {% block body%}
+    <div class="preloader">
+      <div class="loader"></div>
+  </div>
+    <section class="hero">
+        <header id="header">
+          <a id="logo" href="/"><img src="{{url_for('static', filename='logo.png')}}" alt=""></a>
+          <div>
+            <p>Welcome Back {{ session.get("name") }}!</p>
+            <a class="btn" href="/about">About</a>
+            <a class="btn" href="/logout">Logout</a>
+          </div>
+        </header>
+        <header class="hero-header">
+          <h1 class="hero-title">Webcam Food Detection System With <span class="typing-effect" id="pythonText">Python</span></h1>
+        </header>
+        <footer class="hero-footer">
+          {%if session.get("role") == "Admin"%}
+            <a class="button button-primary" href="/capture">Caputer Image</a>
+            <a class="button" href="/admin">Dashboard</a>
+          {%else%}
+            <a class="button button-primary" href="/capture">Caputer Image</a>
+            <a class="button" href="/user_dashboard">Dashboard</a>
+          {%endif%}
+        </footer>
+      </section>
+
+    <script src="{{url_for('static',filename='preloader.js')}}"></script>
+    <script>
+
+      document.addEventListener("load", function () {
+              var flashContainer = document.getElementById("flash-container");
+
+              if (flashContainer) {
+                  // Show the message by moving it down
+                  flashContainer.style.top = "40px";
+
+                  // Hide the message after 3 seconds
+                  setTimeout(function () {
+                      flashContainer.style.top = "-100px"; // Move back up
+                  }, 8000);
+              }
+          });
+      const pythonText = document.getElementById("pythonText");
+      const text = pythonText.textContent;
+      pythonText.textContent = ''; // Clear it to start typing
+
+      let i = 0;
+      let deleting = false;
+
+      function typeWriter() {
+          if (!deleting && i < text.length) {
+              pythonText.textContent += text.charAt(i);
+              i++;
+              setTimeout(typeWriter, 800); // Speed of typing
+          } else if (deleting && i > 0) {
+              pythonText.textContent = text.substring(0, i - 1);
+              i--;
+              setTimeout(typeWriter, 200); // Speed of erasing
+          } else {
+              deleting = !deleting; // Toggle between typing and deleting
+              setTimeout(typeWriter, 1000); // Wait before switching actions
+          }
+      }
+
+      // Function to reset and start typing and erasing again
+      function startTyping() {
+          pythonText.textContent = ''; 
+          i = 0; 
+          deleting = false; 
+          typeWriter(); 
+      }
+
+      // Start typing and erasing every 2 minutes (120000 milliseconds)
+      setInterval(startTyping, 120000);
+
+      // Initial typing on page load
+      window.onload = startTyping;
+
+  </script>>
+
+
+{%endblock%}

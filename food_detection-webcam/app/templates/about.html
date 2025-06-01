@@ -1,0 +1,49 @@
+{% extends "index.html" %}
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='preloader.css')}}">
+<title>Food Detection - About</title>
+{%block body%}
+<div class="body">
+
+   
+    <!-- <div class="preloader">
+        <div class="loader"></div>
+    </div> -->
+    <header id="header">
+        <a id="logo" href="/"><img src="{{url_for('static', filename='logo.png')}}" alt=""></a>
+        <div >
+          <p>Welcome Back {{ session.get("name") }}!</p>
+          <a class="btn" href="/">Home</a>
+          <a class="btn" href="/logout">Logout</a>
+        </div>
+      </header>
+    <section class="container">
+
+        <h2>About Food Detection System</h2>
+        <div class="content"> 
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. 
+                Illum amet laborum perspiciatis eaque harum rerum, sequi fugit ratione
+                 similique voluptatibus vel minus omnis animi aliquid voluptates alias sapiente
+                  distinctio praesentium
+                 tenetur libero reprehenderit quis dolores assumenda suscipit! Quos, laudantium ipsam?</p>
+        </div>
+    </section>
+
+</div>
+    <footer class="footer">
+        <h2>This project was created by</h2>
+        <ul>
+            <li>Usman Abdella</li>
+            <li>Natnael Fikre</li>
+            <li>Nahome Sisay</li>
+            <li>Yabsira Kibreab</li>
+            <li>Abel Wendimagegn</li>
+        </ul>
+    </footer>
+
+    <script src="{{url_for('static',filename='preloader.js')}}"></script>
+{%endblock%}
+

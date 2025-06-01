@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename='capture.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='preloader.css')}}">
+    <title>Food Detection - Capture or Upload</title>
+
+</head>
+<style>
+    
+</style>
+<body>
+    <div class="preloader">
+        <div class="loader"></div>
+    </div>
+    <div class="ploader">
+        <h2>Processing the image </h2>
+        <h3>Please Wait...... </h3>
+        <div class="der">
+
+        </div>
+    </div>
+    <div class="navbar">
+        <h1>Capture Image</h1>
+        <div>
+            {%if session.get("role") == "Admin"%}
+                <a href="/">Home</a>
+                <a href="/admin">Dashboard</a>
+                <a href="/logout">Logout</a>
+            {%else%}
+                <a href="/">Home</a>
+                <a href="/user_dashboard">Dashboard</a>
+                <a href="/logout">Logout</a>
+            {%endif%}
+        </div>
+    </div>
+    <div class="contai">
+        <h1>Choose an Option</h1>
+        <label>
+            <input type="radio" name="option" value="webcam" id="webcamOption">
+            Use Webcam
+        </label>
+        <label>
+            <input type="radio" name="option" value="upload" id="uploadOption">
+            Upload Image
+        </label>
+
+        <div id="webcamSection" class="hidden">
+            <h2>Capture Image from Webcam</h2>
+            <video id="video" autoplay></video>
+            <canvas id="canvas" width="640" height="480" hidden></canvas>
+            <br>
+            <button id="captureButton">Capture Image</button>
+            <h3>Captured Image:</h3>
+            <img id="capturedImage" src="" alt="Captured image will appear here" class="hidden">
+        </div>
+
+
+        <div id="uploadSection" class="hidden">
+            <h2>Upload Image</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="imageInput" accept="image/*">
+                <button type="submit">Check</button>
+            </form>
+            <h3>Selected Image:</h3>
+            <img id="uploadedImage" src="" alt="Uploaded image will appear here">
+        </div>
+    </div>
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <h2>Prediction Result</h2>
+            <p id="predictionMessage"></p>
+            <button class="modal-close">Close</button>
+        </div>
+    </div>
+
+    <script>
+
+const webcamOption = document.getElementById('webcamOption');
+const uploadOption = document.getElementById('uploadOption');
+const webcamSection = document.getElementById('webcamSection');
+const uploadSection = document.getElementById('uploadSection');
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const captureButton = document.getElementById('captureButton');
+const uploadedImage = document.getElementById('uploadedImage');
+const capturedImage = document.getElementById('capturedImage');
+const imageInput = document.getElementById('imageInput');
+const resultModal = document.getElementById('resultModal');
+const predictionMessage = document.getElementById('predictionMessage');
+const modalClose = document.querySelector('.modal-close');
+const uploadForm = document.getElementById('uploadForm');
+
+// Toggle visibility based on selection
+webcamOption.addEventListener('change', () => {
+    webcamSection.classList.remove('hidden');
+    uploadSection.classList.add('hidden');
+    startWebcam();
+});
+
+uploadOption.addEventListener('change', () => {
+    uploadSection.classList.remove('hidden');
+    webcamSection.classList.add('hidden');
+    stopWebcam();
+});
+
+// Start webcam
+function startWebcam() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+            video.srcObject = stream;
+        })
+        .catch((error) => {
+            console.error('Error accessing webcam:', error);
+        });
+}
+
+// Stop webcam
+function stopWebcam() {
+    const stream = video.srcObject;
+    if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+        video.srcObject = null;
+    }
+}
+
+
+captureButton.addEventListener('click', () => {
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+ 
+    const imageData = canvas.toDataURL('image/png');
+    capturedImage.src = imageData;
+    capturedImage.classList.remove('hidden');
+
+    fetch('/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData.split(',')[1] }), // Send only base64 part
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showModal(`Error: ${data.error}`);
+        } else {
+            showModal(`
+                        <div style="
+                        background-color: #fff; 
+                        border-radius: 12px; 
+                        font-family: Arial, sans-serif; 
+                        color: #333; 
+                        max-width: 500px; 
+                        margin: auto; 
+                        text-align: left; 
+                        line-height: 1.6;">
+                        <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #4f46e5;">Prediction</h2>
+                        <p style="font-weight:bold;"><strong>Food Type:</strong> ${data.food_type}</p>
+                        <p><strong>Country of Origin:</strong> ${data.country}</p>
+                        <p><strong>Confidence:</strong> ${data.confidence}</p>
+                        <p><strong>Description:</strong> ${data.description}</p>
+                        <p><strong>Nutrients:</strong> ${data.nutrients}</p>
+ 
+                    </div>
+                `);;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+        const peloader = document.querySelector('.ploader');
+
+        // Capture image from webcam
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = canvas.toDataURL('image/png');
+            capturedImage.src = imageData;
+            capturedImage.classList.remove('hidden');
+
+            // Show preloader
+            peloader.style.display = 'flex';
+
+            fetch('/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageData.split(',')[1] }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showModal(`Error: ${data.error}`);
+                } else {
+                    
+                    ;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                peloader.style.display = 'none';
+            });
+        });
+
+        // Handle image upload
+        uploadForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const file = imageInput.files[0];
+            if (!file) return;
+
+            // Show preloader
+            peloader.style.display = 'flex';
+
+            const reader = new FileReader();
+            reader.onload = function () {
+                const base64Image = reader.result.split(',')[1];
+
+                fetch('/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Image }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showModal(`Error: ${data.error}`);
+                    } else {
+                        showModal(`
+                        <div style="
+                        background-color: #fff; 
+                        border-radius: 12px; 
+                        font-family: Arial, sans-serif;
+                        color: #333; 
+                        max-width: 500px; 
+                        margin: auto; 
+                        text-align: left; 
+                        line-height: 1.1;">
+                        <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #4f46e5;">Prediction</h2>
+                        <p><strong>Food Type:</strong> ${data.food_type}</p>
+                        <p><strong>Country of Origin:</strong> ${data.country}</p>
+                        <p><strong>Confidence:</strong> ${data.confidence}</p>
+                        <p><strong>Description:</strong> ${data.description}</p>
+                        <p><strong>Nutrients:</strong> ${data.nutrients}</p>
+ 
+                    </div>
+                `);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    peloader.style.display = 'none';
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+imageInput.addEventListener('change', () => {
+    const file = imageInput.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            uploadedImage.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+
+
+
+function showModal(message) {
+    predictionMessage.innerHTML = message;
+    resultModal.style.display = 'block';
+}
+
+
+modalClose.addEventListener('click', () => {
+    resultModal.style.display = 'none';
+});
+window.onload = function() {
+            // Uncheck both radio buttons
+            document.getElementById('webcamOption').checked = false;
+            document.getElementById('uploadOption').checked = false;
+        }
+    </script>
+    <script src="{{url_for('static',filename='preloader.js')}}"></script>
+</body>
+</html> 

@@ -1,0 +1,293 @@
+
+
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename='preloader.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='admin.css')}}">
+    <title>Food Detection - Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <!-- Preloader -->
+    <!-- <div class="preloader">
+        <div class="loader"></div>
+    </div> -->
+
+    <div id="toast" class="toast">
+        <p>Record Deleted Successfully!</p>
+    </div>
+
+
+    <div class="navbar">
+        <h1>Admin Dashboard</h1>
+        <div>
+            <a href="/">Home</a>
+            <a href="/all_users">Users</a>
+            <a href="/capture">Capture Image</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <h2>Statistics</h2>
+    <div class="stats-grid">
+        <div class="card">
+            <h3>Total Predictions</h3>
+            <p>{{ total_predictions }}</p>
+        </div>
+        <div class="card">
+            <h3>Number of Users</h3>
+            <p>{{ total_users }}</p>
+        </div>
+        <div class="card">
+            <h3>Most Common Food</h3>
+            <p>{{ most_common_food }}</p>
+        </div>
+        <div class="card">
+            <h3>Average Confidence</h3>
+            <p>{{ avg_confidence }}%</p>
+        </div>
+
+        <div class="card">
+            <h3>Most Food Searched By</h3>
+            <p>{{ most_searched.capitalize() }} : {{ most_predictions }}</p>
+        </div>
+
+        <!-- ML Performance Metrics -->
+        <div class="card">
+            <h3>Average Image Processing Time</h3>
+            <p>{{ avg_image_processing }} ms</p>
+        </div>
+        <div class="card">
+            <h3>Average Inference Time</h3>
+            <p>{{ avg_inference }} ms</p>
+        </div>
+        <div class="card">
+            <h3>Average Total Execution Time</h3>
+            <p>{{ avg_total_execution }} ms</p>
+        </div>
+    </div>
+
+
+    <!-- Chart Section -->
+    <h2>Visualization</h2>
+    <div class="chart-container" style="width: 85%;height: 45vh; margin-top: 20px;">
+        <canvas id="commonFoodChart"></canvas>
+    </div>
+
+    <!-- Logs Section -->
+    <h2>Logs</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Food Type</th>
+                <th>Searched by</th>
+                <th>Confidence</th>
+                <th>Timestamp</th>
+                <th>Delete Food</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr id="log-{{ log[0] }}">
+                <td>{{ log[0] }}</td>
+                <td>{{ log[1] }}</td>
+                <td>{{ log[2] }}</td>
+                <td>{{ log[3] }}</td>
+                <td>{{ log[4] }}</td>
+                <td>
+                    <form action="{{ url_for('delete_l.delete_log' ,log_id = log[0]) }}" method="post">
+                        <button type="submit" class="delete-btn" data-id="{{ log[0] }}">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+    var labels = '{{ food_labels | tojson }}';
+    var data = '{{ food_data , tojson }}';
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Fix Jinja2 variable handling
+        var labels = JSON.parse('{{ food_labels | default([]) | tojson | safe }}');
+        var data = JSON.parse('{{ food_data | default([]) | tojson | safe }}');
+
+        // Ensure data is an array
+        if (!Array.isArray(data)) {
+            console.error("Data is not an array:", data);
+            data = []; 
+        }
+
+        const ctx = document.getElementById('commonFoodChart').getContext('2d');
+
+        // Find the highest value (longest bar)
+        const maxValue = Math.max(...data);
+        const highlightColor = 'rgba(255, 0, 0, 0.9)'; // Color for the longest bar
+
+        const commonFoodChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels, // X-axis labels (food items)
+                datasets: [{
+                    label: 'Most Common Food Items',
+                    data: data, 
+                    top:10,
+                    backgroundColor: data.map(value => value === maxValue ? highlightColor : 'rgba(54, 162, 235, 0.8)'),
+                    borderColor: data.map(value => value === maxValue ? 'rgba(255, 0, 0, 1)' : 'rgba(54, 162, 235, 1)'),
+                    borderWidth: 2,
+                    borderRadius: 8, // Rounded bars
+                    hoverBackgroundColor: 'rgba(0, 0, 0, 0.2)', // Subtle hover effect
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#333',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    
+                    title: {
+                        display: true,
+                        text: 'Most Commonly Detected Food Items',
+                        font: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        padding: 6
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 12 }
+                    },
+                    datalabels: {  // 📌 Add data labels on top of bars
+                        anchor: 'end',
+                        align: 'top',
+                        color: 'black',
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        },
+                        formatter: (value) => value // Show the count
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: true
+                        },
+                        ticks: {
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.3)',
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            stepSize: 1
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                }
+            },
+            plugins: [ChartDataLabels] // Make sure to include ChartJSPluginDataLabels
+        });
+    });
+</script>
+
+
+</script>
+    </script>
+
+    <!-- jQuery for Deleting Logs -->
+    <script>
+        toast = document.getElementById("toats")
+        $(document).on('click', '.delete-btn', function () {
+            const logId = $(this).data('id');
+            const row = $(`#log-${logId}`);
+
+            if (confirm('Are you sure you want to delete this record?')) {
+                // $('.preloader').show();
+
+                $.ajax({
+                    url: `/delete/${logId}`,
+                    type: 'POST',
+                    success: function (response) {
+                        $('.preloader').hide();
+                        if (response.success) {
+                            // $('#toast').text(response.message).fadeIn().delay(3000).fadeOut();
+                            $(".toast").addClass("show")
+                            toast.classList.add("show")
+                            row.remove();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function () {
+                        // $('.preloader').hide();
+                        alert('An error occurred while trying to delete the record.');
+                    }
+                });
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+    var flashContainer = document.getElementById("flash-container");
+
+            if (flashContainer) {
+                // Show the message by moving it down
+                flashContainer.style.top = "20px";
+
+                // Hide the message after 3 seconds
+                setTimeout(function () {
+                    flashContainer.style.top = "-100px"; // Move back up
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

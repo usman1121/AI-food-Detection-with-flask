@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Food Detection System</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='login.css')}}">
+</head>
+<body>
+    <div class="preloader">
+        <div class="loader"></div>
+    </div>
+    <div class="container">
+        <div class="form-box login">
+            <form action="/register" method="post">
+                <h1>Registration</h1>
+                <p class="message">{{ message }}</p>
+
+                <div class="input-box">
+                    <input name="username" type="text" placeholder="Username" required>
+                    <i class="bx bxs-user"></i>
+                </div>
+                
+                <div class="input-box">
+                    <input name="email" type="email" placeholder="Email" required>
+                    <i class="bx bxs-envelope"></i>
+                </div>
+                
+                <div class="input-box">
+                    <input name="password" type="password" placeholder="Password" required>
+                    <i class="bx bxs-lock-alt"></i>
+                </div>
+
+                <div class="input-box">
+                    <select name="role" id="role" class="role" onchange="toggleAdminCode()" required>
+                        <option value="none" selected disabled>Select Role</option>
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+
+                <div class="input-box" id="adminCodeField" style="display: none;">
+                    <input name="admin_code" id="admin_code" type="password" placeholder="Enter Admin Code">
+                    <i class="bx bxs-lock"></i>
+                </div>
+
+                <button type="submit" class="btn">Register</button>
+            </form>
+        </div>
+
+        <div class="toggle-box">
+            <div class="toggle-panel toggle-left">
+                <h1>Hello, Welcome!</h1>
+                <p>Already have an account?</p>
+                <button class="btn register-btn"><a href="/login">Login</a></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAdminCode() {
+            var role = document.getElementById("role").value;
+            var adminCodeField = document.getElementById("adminCodeField");
+
+            if (role === "Admin") {
+                adminCodeField.style.display = "block";
+            } else {
+                adminCodeField.style.display = "none";
+            }
+        }
+    </script>
+
+</body>
+</html>
